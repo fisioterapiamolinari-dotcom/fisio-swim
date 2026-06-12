@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FisioSwim — Registrazione</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .wrap {
+    background: #fff;
+    border-radius: 12px;
+    padding: 36px 32px 32px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* LOGO */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 28px;
+  }
+  .logo span {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    color: #111;
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #7BC8DC;
+    flex-shrink: 0;
+  }
+
+  /* FORM */
+  .field {
+    margin-bottom: 16px;
+  }
+  .field:last-of-type { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  input {
+    width: 100%;
+    font-size: 15px;
+    padding: 10px 0;
+    border: none;
+    border-bottom: 1.5px solid #e5e7eb;
+    background: transparent;
+    color: #111;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  input:focus { border-bottom-color: #7BC8DC; }
+  input.err { border-bottom-color: #e53e3e; }
+  input::placeholder { color: #ccc; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: #f0f0f0; margin: 24px 0; }
+
+  /* BUTTON */
+  .btn {
+    width: 100%;
+    padding: 12px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-top: 24px;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* STATES */
+  .sent { display: none; text-align: center; padding: 16px 0; }
+  .sent.show { display: block; }
+  .form-body.hidden { display: none; }
+  .check { font-size: 36px; margin-bottom: 10px; }
+  .sent h2 { font-size: 16px; font-weight: 600; color: #111; margin-bottom: 6px; }
+  .sent p { font-size: 13px; color: #888; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="logo">
+    <span>fisio</span>
+    <div class="dot"></div>
+    <span>swim</span>
+  </div>
+
+  <div class="form-body" id="form-body">
+    <div class="row">
+      <div class="field">
+        <label>Nome</label>
+        <input type="text" id="nome" placeholder="Mario" autocomplete="given-name">
+      </div>
+      <div class="field">
+        <label>Cognome</label>
+        <input type="text" id="cognome" placeholder="Rossi" autocomplete="family-name">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field">
+      <label>Codice fiscale</label>
+      <input type="text" id="cf" placeholder="RSSMRA80A01H501Z"
+        maxlength="16"
+        autocomplete="off"
+        oninput="this.value=this.value.toUpperCase()"
+        style="font-family:monospace;letter-spacing:1.5px;">
+    </div>
+
+    <div class="field">
+      <label>Indirizzo di residenza</label>
+      <input type="text" id="indirizzo" placeholder="Via Roma 1" autocomplete="street-address">
+    </div>
+
+    <div class="field">
+      <label>CAP</label>
+      <input type="text" id="cap" placeholder="00146" maxlength="5"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        style="max-width:120px;">
+    </div>
+
+    <button class="btn" id="btn" onclick="invia()">Invia →</button>
+  </div>
+
+  <div class="sent" id="sent">
+    <div class="check">✅</div>
+    <h2>Dati ricevuti</h2>
+    <p>Grazie! Ti contatteremo presto per confermare l'appuntamento.</p>
+  </div>
+
+</div>
+
+<script>
+  const WEBHOOK = 'https://TUO-N8N.com/webhook/fisioswim-registrazione';
+
+  async function invia() {
+    const nome     = document.getElementById('nome').value.trim();
+    const cognome  = document.getElementById('cognome').value.trim();
+    const cf       = document.getElementById('cf').value.trim();
+    const indirizzo= document.getElementById('indirizzo').value.trim();
+    const cap      = document.getElementById('cap').value.trim();
+
+    // Validazione minima
+    let ok = true;
+    [['nome',nome],['cognome',cognome],['cf',cf],['indirizzo',indirizzo],['cap',cap]]
+      .forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (!val) { el.classList.add('err'); ok = false; }
+        else el.classList.remove('err');
+      });
+    if (!ok) return;
+    if (cf.length !== 16) {
+      document.getElementById('cf').classList.add('err');
+      return;
+    }
+
+    const btn = document.getElementById('btn');
+    btn.disabled = true;
+    btn.textContent = 'Invio…';
+
+    try {
+      await fetch(WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, cognome, codice_fiscale: cf, indirizzo, cap }),
+        mode: 'no-cors'
+      });
+    } catch(e) {}
+
+    document.getElementById('form-body').classList.add('hidden');
+    document.getElementById('sent').classList.add('show');
+  }
+</script>
+</body>
+</html>
